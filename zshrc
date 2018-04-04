@@ -2,10 +2,8 @@
 export EDITOR=nvim
 export MAKEFLAGS="-j9 -l8"
 
-autoload -Uz promptinit
-promptinit
-
-prompt redhat
+powerline-daemon -q
+. /usr/lib/python3.6/site-packages/powerline/bindings/zsh/powerline.zsh
 
 # Auto completion stuff
 zstyle ':completion:*' completer _complete _ignored
