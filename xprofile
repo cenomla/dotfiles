@@ -1,0 +1,6 @@
+#!/bin/sh
+[[ -f ~/.zshenv ]] && source ~/.zshenv
+xrdb -merge ~/.Xresources
+
+light-locker &
+
