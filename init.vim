@@ -67,8 +67,31 @@ set background=dark
 colorscheme solarized
 
 " Pretty statusline and tabline
-function! StatusLine(...)
-	return crystalline#mode() . '%#Crystalline# %<%f%h%w%m%r %#CrystallineFill# %=%#Crystalline# %y %c%V %P(%L) '
+function! StatusLine(current, width)
+	let l:line = ''
+
+	if a:current
+		let l:line .= crystalline#mode() . '%#Crystalline#'
+	else
+		let l:line .= '%#CrystallineInactive#'
+	endif
+	let l:line .= ' %<%f%h%w%m%r '
+	if a:current
+		let l:line .= '%#CrystallineFill#'
+	endif
+
+	let l:line .= '%='
+
+	if a:current
+		let l:line .= '%= %{&paste ? "PASTE ":""}%{&spell?"SPELL ":""}%#Crystalline#'
+	endif
+	if a:width > 80
+		let l:line .= ' %{&ft} | %{&fenc!=#""?&fenc:&enc} | %{&ff} %c%V %P(%L)'
+	endif
+	let l:line .= ' '
+
+
+	return l:line
 endfunction
 
 function! TabLine()
@@ -80,7 +103,6 @@ let g:crystalline_statusline_fn = 'StatusLine'
 let g:crystalline_tabline_fn = 'TabLine'
 let g:crystalline_theme = 'solarized'
 
-set showtabline=2
 set guioptions-=e
 set laststatus=2
 
@@ -109,6 +131,18 @@ augroup setfmt
 	autocmd FileType go set formatprg=go\ fmt
 augroup END
 
+augroup cusmake
+	autocmd!
+	autocmd FileType typescript set makeprg=tsc
+	autocmd QuickFixCmdPost [^l]* nested cwindow
+	autocmd QuickFixCmdPost   l* nested lwindow
+augroup END
+
+augroup cusindent
+	autocmd!
+	autocmd FileType dart set tabstop=2 softtabstop=-1 expandtab shiftwidth=0
+augroup END
+
 " Language client
 let g:LanguageClient_serverCommands = {
 	\ 'cpp' : ['clangd'],
@@ -130,6 +164,10 @@ let g:strip_whitespace_confirm = 0
 let g:strip_whitespace_on_save = 1
 let g:show_spaces_that_precede_tabs = 1
 
+" Typescript config
+let g:typescript_compiler_binary = 'tsc'
+let g:typescript_compiler_options = ''
+
 " Fzf config
 let g:fzf_command_prefix = 'Fzf'
 
@@ -137,16 +175,57 @@ let g:fzf_command_prefix = 'Fzf'
 let g:go_code_completion_enabled = 0 " Were using language client instead
 let g:go_fmt_fail_silently = 1 " We can already see syntax errors, don't tell us again when formating
 
+" File switch vars
+let b:file_switch_regex = '^$'
+
+function! BuildExtensionRegex(extensions)
+	let l:regex = ''
+	for ext in a:extensions
+		if l:regex != ''
+			let l:regex .= '\|'
+		endif
+		let l:regex .= '\(\.' . ext . '$\)'
+	endfor
+	return l:regex
+endfunction
+
+augroup file_switch_set_regex
+	au FileType cpp let b:file_switch_regex = BuildExtensionRegex(['h', 'hpp', 'hh', 'hxx', 'c', 'cpp', 'cxx', 'cc'])
+	au FileType c let b:file_switch_regex = BuildExtensionRegex(['h', 'c'])
+augroup END
+
+function! FindSimilarFile(name, regex)
+	let l:files = globpath(&path, a:name . '.*', 0, 1)
+	let l:matchFiles = []
+	for it in reverse(l:files)
+		if it =~ a:regex
+			let l:matchFiles += [it]
+		endif
+	endfor
+
+	" echo a:regex
+	echo l:matchFiles
+
+	let l:currentFile = expand('%')
+	let l:mi = l:matchFiles[0] == l:currentFile ? 1 : 0
+
+	if l:mi != -1 && l:mi < len(l:matchFiles)
+		execute 'e ' . l:matchFiles[l:mi]
+	endif
+endfunction
+
 " C/C++ related binds
-nnoremap <Leader>h :find %:t:r.h<CR>
-nnoremap <Leader>c :find %:t:r.c<CR>
-nnoremap <Leader>x :find %:t:r.cpp<CR>
+nnoremap <Leader>k :call FindSimilarFile(expand('%:t:r'), b:file_switch_regex)<CR>
 
 " Build/run related binds
 nnoremap <Leader>r :Make<CR>
 nnoremap <Leader>R :execute "Make"<CR>:execute "Dispatch" g:prog<CR>
 
 " Format with format prg
+" mg - set mark g to cursor
+" gg - move to first line
+" gqG - format to last line
+" 'g - move back to mark
 nnoremap <Leader>p mggggqG'g
 
 " Language Client
