@@ -24,7 +24,7 @@ bindkey "^R" history-incremental-search-backward
 # Alias'
 alias ls="ls --color=auto"
 alias ll="ls -Al"
-alias rm="rm -iv"
+alias rm="rm -Iv"
 
 # Canadian mode
 alias please="sudo"
