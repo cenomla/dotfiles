@@ -3,6 +3,7 @@ filetype off
 
 " Load plugins
 set rtp+=~/.vim/bundle/Vundle.vim
+set rtp+=~/.fzf
 call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
@@ -41,6 +42,8 @@ set tabstop=4 " Tab characters appear 4 spaces wide
 set softtabstop=-1 " Use shiftwidth spaces when converting tabs to spaces
 set noexpandtab " Always insert tabs when the tab key is pressed
 set shiftwidth=0 " Indents are the same width as tabs
+
+set linebreak " Don't split up words on soft wrap
 
 set ttimeout
 set ttimeoutlen=100
