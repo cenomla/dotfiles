@@ -64,6 +64,9 @@ syntax on
 
 runtime macros/matchit.vim
 
+" Use the default background for matched parenthesis
+highlight MatchParen ctermbg=8
+
 set mouse=a
 
 set background=dark
