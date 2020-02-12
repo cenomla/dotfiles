@@ -12,6 +12,7 @@ Plugin 'junegunn/fzf.vim'
 
 Plugin 'dart-lang/dart-vim-plugin'
 Plugin 'fatih/vim-go'
+Plugin 'ziglang/zig.vim'
 Plugin 'leafgarland/typescript-vim'
 
 Plugin 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh', }
@@ -109,14 +110,10 @@ let g:crystalline_statusline_fn = 'StatusLine'
 let g:crystalline_tabline_fn = 'TabLine'
 let g:crystalline_theme = 'solarized'
 
-set guioptions-=e
 set laststatus=2
 
 " Render whitespace as
 set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:␣
-
-" Custom tab label
-set guitablabel=%{exists('t:mytablabel')?t:mytablabel\ :''}
 
 let mapleader = "\<SPACE>"
 
