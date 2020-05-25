@@ -129,7 +129,7 @@ augroup END
 
 augroup setfmt
 	autocmd!
-	autocmd FileType dart set formatprg=dartfmt
+	autocmd FileType dart set formatprg=dartfmt\ -l\ 120
 	autocmd FileType cpp set formatprg=clang-format
 	autocmd FileType go set formatprg=go\ fmt
 augroup END
