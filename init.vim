@@ -173,6 +173,7 @@ let g:typescript_compiler_options = ''
 
 " Fzf config
 let g:fzf_command_prefix = 'Fzf'
+let $FZF_DEFAULT_COMMAND = 'rg --files --hidden .'
 
 " Go config
 let g:go_code_completion_enabled = 0 " Were using language client instead
