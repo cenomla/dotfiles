@@ -111,6 +111,7 @@ let g:crystalline_tabline_fn = 'TabLine'
 let g:crystalline_theme = 'solarized'
 
 set laststatus=2
+set signcolumn=no
 
 " Render whitespace as
 set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:␣
