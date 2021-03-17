@@ -20,6 +20,7 @@ Plugin 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install
 Plugin 'tpope/vim-dispatch'
 
 Plugin 'altercation/vim-colors-solarized'
+Plugin 'morhetz/gruvbox'
 
 Plugin 'ntpeters/vim-better-whitespace'
 
@@ -67,8 +68,13 @@ runtime macros/matchit.vim
 
 set mouse=a
 
+" Theme settings
+set termguicolors
 set background=dark
-colorscheme solarized
+let g:gruvbox_contrast_dark = 'medium'
+let g:gruvbox_contrast_light = 'medium'
+let g:gruvbox_improved_strings = 1
+colorscheme gruvbox
 
 " Use the default background for matched parenthesis
 highlight MatchParen ctermbg=8
@@ -108,7 +114,7 @@ endfunction
 
 let g:crystalline_statusline_fn = 'StatusLine'
 let g:crystalline_tabline_fn = 'TabLine'
-let g:crystalline_theme = 'solarized'
+let g:crystalline_theme = 'gruvbox'
 
 set laststatus=2
 set signcolumn=no
@@ -144,7 +150,7 @@ augroup END
 
 augroup cusindent
 	autocmd!
-	autocmd FileType dart set tabstop=2 softtabstop=-1 expandtab shiftwidth=0
+	autocmd FileType dart setlocal tabstop=2 softtabstop=-1 expandtab shiftwidth=0
 augroup END
 
 " Language client
@@ -152,13 +158,46 @@ let g:LanguageClient_serverCommands = {
 	\ 'cpp' : ['clangd'],
 	\ 'javascript' : ['javascript-typescript-stdio'],
 	\ 'typescript' : ['javascript-typescript-stdio'],
-	\ 'dart' : ['dart', '/opt/dart-sdk-dev/bin/snapshots/analysis_server.dart.snapshot', '--lsp'],
+	\ 'dart' : ['dart_language_server', '--lsp'],
 	\ 'go' : ['gopls'],
 	\ }
 
 let g:LanguageClient_rootMarkers = {
 	\ 'javascript': ['jsconfig.json'],
 	\ 'typescript': ['tsconfig.json'],
+	\ 'cpp': ['compile_commands.json', 'build/compile_commands.json', 'build-ninja/compile_commands.json'],
+	\}
+
+let g:LanguageClient_diagnosticsList = 'Location'
+let g:LanguageClient_diagnosticsDisplay = {
+	\	1: {
+	\		'name': 'Error',
+	\		'texthl': 'None',
+	\		'signText': '✖',
+	\		'signTexthl': 'LanguageClientErrorSign',
+	\		'virtualTexthl': 'Error',
+	\	},
+	\	2: {
+	\		'name': 'Warning',
+	\		'texthl': 'None',
+	\		'signText': '⚠',
+	\		'signTexthl': 'LanguageClientWarningSign',
+	\		'virtualTexthl': 'Todo',
+	\	},
+	\	3: {
+	\		'name': 'Information',
+	\		'texthl': 'None',
+	\		'signText': 'ℹ',
+	\		'signTexthl': 'LanguageClientInfoSign',
+	\		'virtualTexthl': 'Todo',
+	\	},
+	\	4: {
+	\		'name': 'Hint',
+	\		'texthl': 'None',
+	\		'signText': '➤',
+	\		'signTexthl': 'LanguageClientInfoSign',
+	\		'virtualTexthl': 'Todo',
+	\	},
 	\}
 
 " Better whitespace config
@@ -219,6 +258,9 @@ function! FindSimilarFile(name, regex)
 	endif
 endfunction
 
+inoremap jk <ESC>
+inoremap kj <ESC>
+
 " C/C++ related binds
 nnoremap <Leader>k :call FindSimilarFile(expand('%:t:r'), b:file_switch_regex)<CR>
 
@@ -233,11 +275,16 @@ nnoremap <Leader>R :execute "Make"<CR>:execute "Dispatch" g:prog<CR>
 " 'g - move back to mark
 nnoremap <Leader>p mggggqG'g
 
+" Key bind for showing all project todos
+nnoremap <Leader>t :cexpr system('rg -n TODO')<CR>
+
 " Language Client
 nnoremap <Leader>ld :call LanguageClient#textDocument_definition()<CR>
 nnoremap <Leader>li :call LanguageClient#textDocument_implementation()<CR>
 nnoremap <Leader>lh :call LanguageClient#textDocument_hover()<CR>
-nnoremap <Leader>lr :call LanguageClient#textDocument_rename()<CR>
+nnoremap <Leader>ln :call LanguageClient#textDocument_rename()<CR>
+nnoremap <Leader>lr :call LanguageClient#textDocument_references()<CR>
+nnoremap <Leader>ls :call LanguageClient#textDocument_signatureHelp()<CR>
 nnoremap <Leader>l :call LanguageClient_contextMenu()<CR>
 
 " FZF binds
