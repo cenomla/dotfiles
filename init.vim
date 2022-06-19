@@ -136,7 +136,7 @@ augroup END
 
 augroup setfmt
 	autocmd!
-	autocmd FileType dart set formatprg=dartfmt\ -l\ 120
+	autocmd FileType dart set formatprg=dart\ format\ -l\ 120
 	autocmd FileType cpp set formatprg=clang-format
 	autocmd FileType go set formatprg=go\ fmt
 augroup END
@@ -144,6 +144,7 @@ augroup END
 augroup cusmake
 	autocmd!
 	autocmd FileType typescript set makeprg=tsc
+	autocmd FileType markdown set makeprg=markdown\ -f\ fencedcode\ -S\ -o\ /tmp/out.html\ %
 	autocmd QuickFixCmdPost [^l]* nested cwindow
 	autocmd QuickFixCmdPost   l* nested lwindow
 augroup END
@@ -158,7 +159,7 @@ let g:LanguageClient_serverCommands = {
 	\ 'cpp' : ['clangd'],
 	\ 'javascript' : ['javascript-typescript-stdio'],
 	\ 'typescript' : ['javascript-typescript-stdio'],
-	\ 'dart' : ['dart_language_server', '--lsp'],
+	\ 'dart' : ['dart', 'language-server'],
 	\ 'go' : ['gopls'],
 	\ }
 
@@ -168,34 +169,35 @@ let g:LanguageClient_rootMarkers = {
 	\ 'cpp': ['compile_commands.json', 'build/compile_commands.json', 'build-ninja/compile_commands.json'],
 	\}
 
+let g:LanguageClient_applyCompletionAdditionalTextEdits = 0 " Don't edit things I don't want you too
 let g:LanguageClient_diagnosticsList = 'Location'
 let g:LanguageClient_diagnosticsDisplay = {
 	\	1: {
 	\		'name': 'Error',
 	\		'texthl': 'None',
-	\		'signText': '✖',
-	\		'signTexthl': 'LanguageClientErrorSign',
+	\		'signText': 'None',
+	\		'signTexthl': 'None',
 	\		'virtualTexthl': 'Error',
 	\	},
 	\	2: {
 	\		'name': 'Warning',
 	\		'texthl': 'None',
-	\		'signText': '⚠',
-	\		'signTexthl': 'LanguageClientWarningSign',
+	\		'signText': 'None',
+	\		'signTexthl': 'None',
 	\		'virtualTexthl': 'Todo',
 	\	},
 	\	3: {
 	\		'name': 'Information',
 	\		'texthl': 'None',
-	\		'signText': 'ℹ',
-	\		'signTexthl': 'LanguageClientInfoSign',
+	\		'signText': 'None',
+	\		'signTexthl': 'None',
 	\		'virtualTexthl': 'Todo',
 	\	},
 	\	4: {
 	\		'name': 'Hint',
 	\		'texthl': 'None',
-	\		'signText': '➤',
-	\		'signTexthl': 'LanguageClientInfoSign',
+	\		'signText': 'None',
+	\		'signTexthl': 'None',
 	\		'virtualTexthl': 'Todo',
 	\	},
 	\}
@@ -241,8 +243,14 @@ augroup END
 function! FindSimilarFile(name, regex)
 	let l:files = globpath(&path, a:name . '.*', 0, 1)
 	let l:matchFiles = []
+	let l:currentFile = expand('%')
+	let l:mi = -1
+
 	for it in reverse(l:files)
 		if it =~ a:regex
+			if l:currentFile == it
+				let l:mi = len(l:matchFiles)
+			endif
 			let l:matchFiles += [it]
 		endif
 	endfor
@@ -250,11 +258,8 @@ function! FindSimilarFile(name, regex)
 	" echo a:regex
 	echo l:matchFiles
 
-	let l:currentFile = expand('%')
-	let l:mi = l:matchFiles[0] == l:currentFile ? 1 : 0
-
-	if l:mi != -1 && l:mi < len(l:matchFiles)
-		execute 'e ' . l:matchFiles[l:mi]
+	if l:mi != -1
+		execute 'e ' . l:matchFiles[(l:mi + 1) % len(l:matchFiles)]
 	endif
 endfunction
 
