@@ -1,19 +1,25 @@
 # dotfiles
-linux configuration
+Linux configuration
 
 ## Dependencies
  - Git
  - Neovim
-  - [Vundle](https://github.com/VundleVim/Vundle.vim) for vim
+   - Install [Packer](https://github.com/wbthomason/packer.nvim) for nvim
  - zsh
-  - zsh-completions
-  - zsh-syntax-highlighting
+   - zsh-completions
+   - zsh-syntax-highlighting
  - fzf
- - Termite
+ - rg
+ - Kitty
 
 ## Installation
- - Source `init.vim` from your vimrc file
- - Add the `nvim` dir to your `rtp` in `vimrc`
- - Copy `termite/config` to `~/.config/termite/config`
+ - Add the following lines to your nvim config:
+
+```lua
+vim.opt.rtp:append("<path-to-dotfiles>/nvim")
+require("cenomla")
+```
+
+ - Copy `kitty.conf` to `~/.config/kitty/kitty.conf`
  - Source `zshrc` from your zshrc file
  - Source `zshenv` from your zshenv file

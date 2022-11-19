@@ -127,6 +127,7 @@ let mapleader = "\<SPACE>"
 augroup cusft
 	autocmd!
 	autocmd BufNewFile,BufRead *.glsl set filetype=glsl
+	autocmd BufNewFile,BufRead *.glslinc set filetype=glsl
 augroup END
 
 augroup cussyn
@@ -152,13 +153,15 @@ augroup END
 augroup cusindent
 	autocmd!
 	autocmd FileType dart setlocal tabstop=2 softtabstop=-1 expandtab shiftwidth=0
+	autocmd FileType typescript setlocal tabstop=2 softtabstop=-1 expandtab shiftwidth=0
+	autocmd FileType typescriptreact setlocal tabstop=2 softtabstop=-1 expandtab shiftwidth=0
 augroup END
 
 " Language client
 let g:LanguageClient_serverCommands = {
 	\ 'cpp' : ['clangd'],
-	\ 'javascript' : ['javascript-typescript-stdio'],
-	\ 'typescript' : ['javascript-typescript-stdio'],
+	\ 'javascript' : ['tsserver'],
+	\ 'typescript' : ['tsserver'],
 	\ 'dart' : ['dart', 'language-server'],
 	\ 'go' : ['gopls'],
 	\ }
