@@ -12,7 +12,7 @@ end
 
 local packer_bootstrap = ensure_packer()
 
-require('packer').startup(function(use)
+require("packer").startup(function(use)
 	-- Packer can manage itself
 	use("wbthomason/packer.nvim")
 
@@ -79,9 +79,18 @@ vim.g.gruvbox_constrast_light = "medium"
 vim.g.gruvbox_improved_strings = 1
 vim.cmd("colorscheme gruvbox")
 
+-- Link the diagnostics colors to gruvbox colors
+vim.cmd [[
+	highlight! link DiagnosticError GruvboxRedBold
+	highlight! link DiagnosticWarn GruvboxOrangeBold
+	highlight! link DiagnosticInfo GruvboxYellowBold
+	highlight! link DiagnosticHint GruvboxBlueBold
+]]
+
+
 -- Pretty statusline and tabline
 function _G.statusline(current, width)
-	local line = ''
+	local line = ""
 
 	if current == 1 then
 		line = line .. vim.fn["crystalline#mode"]() .. "%#Crystalline#"
@@ -108,7 +117,7 @@ function _G.statusline(current, width)
 end
 
 function _G.tabline()
-	local vimLabel = 'NVIM'
+	local vimLabel = "NVIM"
 	return vim.fn["crystalline#bufferline"](2, #vimLabel + 1, 1) .. "%=%#CrystallineTab# " .. vimLabel .. " "
 end
 
@@ -124,7 +133,7 @@ endfunction
 
 vim.g.crystalline_statusline_fn = "StatusLine"
 vim.g.crystalline_tabline_fn = "TabLine"
-vim.g.crystalline_theme = 'gruvbox'
+vim.g.crystalline_theme = "gruvbox"
 
 vim.opt.laststatus = 2
 vim.opt.signcolumn = "no"
@@ -190,68 +199,9 @@ vim.g.show_spaces_that_precede_tabs = our
 vim.g.fzf_command_prefix = "Fzf"
 vim.env.FZF_DEFAULT_COMMAND = "rg --files --hidden ."
 
--- Find similar file
-
-vim.b.file_switch_regex = "^$"
-
-function build_extension_regex(extensions)
-	local regex = ""
-	for i, ext in ipairs(extensions) do
-		if regex ~= "" then
-			regex = regex .. "\\|"
-		end
-		regex = regex .. "\\(\\." .. ext .. "$\\)"
-	end
-	return regex
-end
-
-vim.api.nvim_create_augroup("file_switch_set_regex", {})
-vim.api.nvim_create_autocmd("FileType", {
-	group = "file_switch_set_regex",
-	pattern = "cpp",
-	callback = function()
-		vim.b.file_switch_regex = build_extension_regex({"h", "hpp", "hh", "hxx", "c", "cpp", "cxx", "cc"})
-	end
-})
-vim.api.nvim_create_autocmd("FileType", {
-	group = "file_switch_set_regex",
-	pattern = "c",
-	callback = function()
-		vim.b.file_switch_regex = build_extension_regex({"h", "c"})
-	end
-})
-
-function find_similar_file(name, pattern)
-	local regex = vim.regex(pattern)
-	local files = vim.fn.globpath(vim.o.path, name .. ".*", 0, 1)
-	local matchFiles = {}
-	local currentFile = vim.fn.expand("%")
-	local mi = -1
-
-	for i = #files, 1, -1 do
-		local it = files[i]
-		if regex:match_str(it) then
-			if currentFile == it then
-				mi = #matchFiles
-			end
-			table.insert(matchFiles, it)
-		end
-	end
-
-	-- echo a:regex
-	print(vim.inspect(matchFiles))
-
-	if mi ~= -1 then
-		vim.cmd("e " .. matchFiles[((mi + 1) % #matchFiles) + 1])
-	end
-end
-
 -- Keybinds
 vim.keymap.set("i", "jk", "<ESC>")
 vim.keymap.set("i", "kj", "<ESC>")
-
--- C/C++ related binds
-vim.keymap.set("n", "<leader>k", function() find_similar_file(vim.fn.expand("%:t:r"), vim.b.file_switch_regex) end)
 
 -- Build/run related binds
 vim.keymap.set("n", "<leader>r", ":Make<CR>")
@@ -276,36 +226,66 @@ vim.keymap.set("n", "<leader>fr", ":FzfRg<CR>")
 
 -- lsp config
 
-vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-	vim.lsp.diagnostic.on_publish_diagnostics, {
-		underline = false,
-	}
-)
+vim.diagnostic.config({
+	underline = false,
+	virtual_text = {
+		spacing = 1,
+	},
+})
+
+-- Highlight the line numbers for lines with diagnostic messages on them
+vim.cmd [[
+	sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=DiagnosticVirtualTextError
+	sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=DiagnosticVirtualTextWarn
+	sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=DiagnosticVirtualTextInfo
+	sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=DiagnosticVirtualTextHint
+]]
 
 vim.keymap.set("n", "<leader>df", vim.diagnostic.open_float, { silent=true })
+vim.keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { silent=true })
+vim.keymap.set("n", "<leader>dq", vim.diagnostic.setqflist, { silent=true })
 
 local on_attach = function(client, bufnr)
 	vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
 	local bufopts = { silent=true, buffer=bufnr }
 
+	local function switch_source_header()
+		local params = {uri = vim.uri_from_bufnr(0)}
+		client.request("textDocument/switchSourceHeader", params, function(err, result)
+			if err then
+				error(tostring(err))
+			end
+			if not result then
+				print("Corresponding file not found")
+				return
+			end
+			vim.cmd("edit " .. vim.uri_to_fname(result))
+		end, 0)
+	end
+
 	vim.keymap.set("n", "<leader>lD", vim.lsp.buf.declaration, bufopts)
 	vim.keymap.set("n", "<leader>ld", vim.lsp.buf.definition, bufopts)
+	vim.keymap.set("n", "<leader>lt", vim.lsp.buf.type_definition, bufopts)
 	vim.keymap.set("n", "<leader>li", vim.lsp.buf.implementation, bufopts)
 	vim.keymap.set("n", "<leader>lh", vim.lsp.buf.hover, bufopts)
 	vim.keymap.set("n", "<leader>ln", vim.lsp.buf.rename, bufopts)
 	vim.keymap.set("n", "<leader>lr", vim.lsp.buf.references, bufopts)
 	vim.keymap.set("n", "<leader>ls", vim.lsp.buf.signature_help, bufopts)
+	vim.keymap.set("n", "<leader>lf", function() vim.lsp.buf.format{ async = true } end, bufopts)
+	if client.name == "clangd" then
+		vim.keymap.set("n", "<leader>lk", switch_source_header, bufopts)
+	end
 end
 
-require('lspconfig')['clangd'].setup({
+require("lspconfig")["clangd"].setup({
 	on_attach = on_attach,
 })
 
-require('lspconfig')['tsserver'].setup({
+require("lspconfig")["tsserver"].setup({
 	on_attach = on_attach,
 })
-require('lspconfig')['dartls'].setup({
+require("lspconfig")["dartls"].setup({
 	on_attach = on_attach,
 })
 
