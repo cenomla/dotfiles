@@ -145,49 +145,34 @@ vim.g.mapleader = " "
 
 -- Auto commands
 
-vim.api.nvim_create_augroup("cusft", {})
 vim.api.nvim_create_autocmd({"BufNewFile", "BufRead"}, {
-	group = "cusft",
 	pattern = {"*.glsl", "*.glslinc"},
 	command = "set filetype=glsl",
 })
 
-vim.api.nvim_create_augroup("cuslang", {})
 vim.api.nvim_create_autocmd("FileType", {
-	group = "cuslang",
 	pattern = "glsl",
 	command = "set syntax=c",
 })
 vim.api.nvim_create_autocmd("FileType", {
-	group = "cuslang",
-	pattern = {"typescript", "typescriptreact"},
+	pattern = {"typescript", "typescriptreact", "dart"},
 	command = "setlocal tabstop=2 expandtab",
 })
 vim.api.nvim_create_autocmd("FileType", {
-	group = "cuslang",
-	pattern = "dart",
-	command = "setlocal tabstop=2 expandtab",
-})
-
-vim.api.nvim_create_augroup("cusmake", {})
-vim.api.nvim_create_autocmd("FileType", {
-	group = "cusmake",
 	pattern = {"cpp", "c", "asm", "glsl"},
 	command = "set makeprg=make",
 })
 vim.api.nvim_create_autocmd("FileType", {
-	group = "cusmake",
 	pattern = "markdown",
 	command = "set makeprg=markdown\\ -f\\ fencedcode\\ -S\\ -o\\ /tmp/out.html\\ %",
 })
+
 vim.api.nvim_create_autocmd("QuickFixCmdPost", {
-	group = "cusmake",
 	pattern = "[^l]*",
 	command = "cwindow",
 	nested = true,
 })
 vim.api.nvim_create_autocmd("QuickFixCmdPost", {
-	group = "cusmake",
 	pattern = "l*",
 	command = "lwindow",
 	nested = true,
@@ -252,6 +237,9 @@ vim.keymap.set("n", "<leader>dq", vim.diagnostic.setqflist, { silent=true })
 
 local on_attach = function(client, bufnr)
 	vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+
+	-- Disable lsp highlighting
+	client.server_capabilities.semanticTokensProvider = nil
 
 	local bufopts = { silent=true, buffer=bufnr }
 
