@@ -172,6 +172,11 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_augroup("cusmake", {})
 vim.api.nvim_create_autocmd("FileType", {
 	group = "cusmake",
+	pattern = {"cpp", "c", "asm", "glsl"},
+	command = "set makeprg=make",
+})
+vim.api.nvim_create_autocmd("FileType", {
+	group = "cusmake",
 	pattern = "markdown",
 	command = "set makeprg=markdown\\ -f\\ fencedcode\\ -S\\ -o\\ /tmp/out.html\\ %",
 })
