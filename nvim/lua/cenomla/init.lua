@@ -49,6 +49,7 @@ vim.opt.expandtab = false -- Always insert tabs when the tab key is pressed
 vim.opt.shiftwidth = 0 -- Indents are the same width as tabs
 
 vim.opt.linebreak = true -- Don't split up words on soft wrap
+vim.opt.colorcolumn = {115} -- Render a line at the line character limit
 
 vim.opt.ttimeout = true
 vim.opt.ttimeoutlen = 100
@@ -161,10 +162,6 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = {"cpp", "c", "asm", "glsl"},
 	command = "set makeprg=make",
-})
-vim.api.nvim_create_autocmd("FileType", {
-	pattern = "markdown",
-	command = "set makeprg=markdown\\ -f\\ fencedcode\\ -S\\ -o\\ /tmp/out.html\\ %",
 })
 
 vim.api.nvim_create_autocmd("QuickFixCmdPost", {
