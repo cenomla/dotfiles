@@ -16,6 +16,7 @@ require("packer").startup(function(use)
 	-- Packer can manage itself
 	use("wbthomason/packer.nvim")
 
+	use("junegunn/fzf")
 	use("junegunn/fzf.vim")
 
 	use("neovim/nvim-lspconfig")
@@ -89,50 +90,68 @@ vim.cmd [[
 
 
 -- Pretty statusline and tabline
-function _G.statusline(current, width)
-	local line = ""
 
-	if current == 1 then
-		line = line .. vim.fn["crystalline#mode"]() .. "%#Crystalline#"
+local function CrystallineGroupSuffix()
+	if vim.fn.mode() == 'i' and vim.o.paste then
+		return "2"
+	end
+	if vim.o.modified then
+		return "1"
+	end
+	return ""
+end
+
+function vim.g.CrystallineStatuslineFn(winnr)
+	local cl = require("crystalline")
+	vim.g.crystalline_group_suffix = CrystallineGroupSuffix()
+	local isCurrent = winnr == vim.fn.winnr()
+	local s = ""
+
+	if isCurrent then
+		s = s .. cl.ModeHiItem("A") .. cl.ModeLabel() .. cl.HiItem("B")
 	else
-		line = line .. "%#CrystallineInactive#"
+		s = s .. cl.HiItem("Fill")
 	end
-	line = line .. " %<%f%h%w%m%r "
-	if current == 1 then
-		line = line .. "%#CrystallineFill#"
+	s = s .. " %<%f%h%w%m%r "
+
+	if isCurrent then
+		s = s .. cl.HiItem("Fill")
 	end
 
-	line = line .. "%="
+	s = s .. "%="
 
-	if current == 1 then
-		line = line .. "%= %{&paste ? 'PASTE ':''}%{&spell?'SPELL ':''}%#Crystalline#"
+	if isCurrent then
+		s = s .. cl.HiItem("B") .. "%{&paste ? ' PASTE ' : ' '}"
+		s = s .. cl.HiItem("B") .. "%{&spell ? ' SPELL ' : ' '}"
+		s = s .. cl.HiItem("A")
 	end
-	if width > 80 then
-		line = line .. " %{&ft} | %{&fenc!=#''?&fenc:&enc} | %{&ff} %c%V %P(%L)"
+	if vim.fn.winwidth(winnr) then
+		s = s .. " %{&ft} | %{&fenc!=#''?&fenc:&enc} | %{&ff} %c%V %P(%L)"
 	end
-	line = line .. " "
+	s = s .. " "
 
 
-	return line
+	return s
 end
 
-function _G.tabline()
-	local vimLabel = "NVIM"
-	return vim.fn["crystalline#bufferline"](2, #vimLabel + 1, 1) .. "%=%#CrystallineTab# " .. vimLabel .. " "
+function vim.g.CrystallineTablineFn()
+	local cl = require("crystalline")
+	local maxWidth = vim.o.columns
+	local right = "%="
+
+	right = right .. cl.HiItem("TabType")
+	maxWidth = maxWidth - 1
+
+	local vimLabel = " NVIM"
+	right = right .. vimLabel
+	maxWidth = maxWidth - vim.fn.strchars(vimLabel)
+
+	return cl.DefaultTabline({
+		max_tabs = 23,
+		max_width = maxWidth,
+	}) .. right
 end
 
-vim.api.nvim_exec([[
-function! StatusLine(current, width)
-	return v:lua.statusline(a:current, a:width)
-endfunction
-
-function! TabLine()
-	return v:lua.tabline()
-endfunction
-]], false)
-
-vim.g.crystalline_statusline_fn = "StatusLine"
-vim.g.crystalline_tabline_fn = "TabLine"
 vim.g.crystalline_theme = "gruvbox"
 
 vim.opt.laststatus = 2
@@ -187,7 +206,7 @@ vim.g.show_spaces_that_precede_tabs = our
 
 -- Fzf config
 vim.g.fzf_command_prefix = "Fzf"
-vim.env.FZF_DEFAULT_COMMAND = "rg --files --hidden ."
+vim.env.FZF_DEFAULT_COMMAND = "rg --files --path-separator=/ --hidden ."
 
 -- Keybinds
 vim.keymap.set("i", "jk", "<ESC>")
