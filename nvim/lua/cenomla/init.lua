@@ -29,6 +29,8 @@ require("packer").startup(function(use)
 
 	use("rbong/vim-crystalline")
 
+	use("github/copilot.vim")
+
 	if packer_bootstrap then
 		require("packer").sync()
 	end
@@ -89,6 +91,64 @@ vim.cmd [[
 	highlight! link DiagnosticHint GruvboxBlueBold
 ]]
 
+-- Open a floating window with a temp buffer containing a string
+local function OpenTmpFloating(contents)
+	local function SplitLines (inputstr, sep)
+		if sep == nil then
+			sep = "%s"
+		end
+		local t={}
+		for str in string.gmatch(inputstr, '([^'..sep..']+)') do
+			table.insert(t, str)
+		end
+		return t
+	end
+
+	local width = vim.api.nvim_win_get_width(0)
+	local height = vim.api.nvim_win_get_height(0)
+
+	local bufnr = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, SplitLines(contents, '%c'))
+
+	local opts = {
+		relative='win',
+		win=0,
+		width=width,
+		height=height-1,
+		col = 0,
+		row = 0,
+		anchor = 'NW',
+		style = 'minimal',
+		border = 'rounded',
+	}
+
+	local win = vim.api.nvim_open_win(bufnr, 1, opts)
+	vim.api.nvim_win_set_option(win, 'winhl', 'NormalFloat:Normal')
+	vim.api.nvim_win_set_option(win, 'wrap', false)
+end
+
+local function ShellStdout(command)
+	local file = assert(io.popen(command, 'r'))
+	file:flush()
+	local result = file:read('*all')
+	file:close()
+	return result
+end
+
+local function GitBlame()
+	local r,c = unpack(vim.api.nvim_win_get_cursor(0))
+	local startLine = r-10
+	if startLine < 1 then
+		startLine = 1
+	end
+	local lineCount = vim.api.nvim_win_get_height(0)-1
+	if lineCount < 1 then
+		lineCount = 1
+	end
+	local command = 'git blame --date=short -L '..startLine..',+'..lineCount..' '..vim.api.nvim_buf_get_name(0)
+	local blame = ShellStdout(command)
+	OpenTmpFloating(blame)
+end
 
 -- Pretty statusline and tabline
 
@@ -175,12 +235,8 @@ vim.api.nvim_create_autocmd("FileType", {
 	command = "set syntax=c",
 })
 vim.api.nvim_create_autocmd("FileType", {
-	pattern = {"typescript", "typescriptreact", "dart"},
+	pattern = {"typescript", "typescriptreact", "dart", "javascript", "javascriptreact"},
 	command = "setlocal tabstop=2 expandtab",
-})
-vim.api.nvim_create_autocmd("FileType", {
-	pattern = {"cpp", "c", "asm", "glsl"},
-	command = "set makeprg=make",
 })
 
 vim.api.nvim_create_autocmd("QuickFixCmdPost", {
@@ -204,6 +260,13 @@ vim.g.show_spaces_that_precede_tabs = our
 -- Fzf config
 vim.g.fzf_command_prefix = "Fzf"
 vim.env.FZF_DEFAULT_COMMAND = "rg --files --path-separator=/ --hidden ."
+
+-- Copilot config
+vim.g.copilot_filetypes = {
+	["*"] = false,
+	["typescript"] = true,
+	["typescriptreact"] = true,
+}
 
 -- Keybinds
 vim.keymap.set("i", "jk", "<ESC>")
@@ -229,6 +292,9 @@ vim.keymap.set("n", "<leader>fl", ":FzfBLines<CR>")
 vim.keymap.set("n", "<leader>fL", ":FzfLines<CR>")
 vim.keymap.set("n", "<leader>fc", ":FzfCommands<CR>")
 vim.keymap.set("n", "<leader>fr", ":FzfRg<CR>")
+
+-- Git binds
+vim.keymap.set("n", "<leader>gb", GitBlame)
 
 -- lsp config
 
