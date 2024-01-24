@@ -23,13 +23,21 @@ require("packer").startup(function(use)
 
 	use("tpope/vim-dispatch")
 
-	use("morhetz/gruvbox")
+	use("ellisonleao/gruvbox.nvim")
 
 	use("ntpeters/vim-better-whitespace")
 
 	use("rbong/vim-crystalline")
 
 	use("github/copilot.vim")
+
+	use({
+		"nvim-treesitter/nvim-treesitter",
+		run = function()
+			local tsUpdate = require('nvim-treesitter.install').update({ with_sync = true })
+			tsUpdate()
+		end,
+	})
 
 	if packer_bootstrap then
 		require("packer").sync()
@@ -69,27 +77,36 @@ vim.opt.hidden = true
 vim.opt.backup = false
 vim.opt.undofile = false
 
-vim.cmd("syntax on")
-
-vim.cmd("runtime 'macros/matchit.vim'")
+vim.cmd("syntax off")
 
 vim.opt.mouse = "a"
 
 vim.opt.termguicolors = true
 vim.opt.background = "dark"
 
-vim.g.gruvbox_constrast_dark = "medium"
-vim.g.gruvbox_constrast_light = "medium"
-vim.g.gruvbox_improved_strings = 1
+require("gruvbox").setup({
+	terminal_colors = true,
+	overrides = {
+		String = { fg = "#ebdbb2", bg = "#3c3836" },
+		Function = { link = "Normal" },
+		Operator = { link = "Normal" },
+		Delimiter = { link = "Normal" },
+		["@type.qualifier"] = { link = "Special" },
+		["@constant"] = { link = "Normal" },
+		["@constant.builtin"] = { link = "GruvboxPurple" },
+		["@field"] = { link = "Normal" },
+		["@property"] = { link = "Normal" },
+	}
+})
 vim.cmd("colorscheme gruvbox")
 
--- Link the diagnostics colors to gruvbox colors
-vim.cmd [[
-	highlight! link DiagnosticError GruvboxRedBold
-	highlight! link DiagnosticWarn GruvboxOrangeBold
-	highlight! link DiagnosticInfo GruvboxYellowBold
-	highlight! link DiagnosticHint GruvboxBlueBold
-]]
+require("nvim-treesitter.configs").setup({
+	auto_install = false,
+	highlight = {
+		enable = true,
+		additional_vim_regex_highlighting = false,
+	},
+})
 
 -- Open a floating window with a temp buffer containing a string
 local function OpenTmpFloating(contents)
@@ -231,10 +248,6 @@ vim.api.nvim_create_autocmd({"BufNewFile", "BufRead"}, {
 })
 
 vim.api.nvim_create_autocmd("FileType", {
-	pattern = "glsl",
-	command = "set syntax=c",
-})
-vim.api.nvim_create_autocmd("FileType", {
 	pattern = {"typescript", "typescriptreact", "dart", "javascript", "javascriptreact"},
 	command = "setlocal tabstop=2 expandtab",
 })
@@ -304,14 +317,6 @@ vim.diagnostic.config({
 		spacing = 1,
 	},
 })
-
--- Highlight the line numbers for lines with diagnostic messages on them
-vim.cmd [[
-	sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=DiagnosticVirtualTextError
-	sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=DiagnosticVirtualTextWarn
-	sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=DiagnosticVirtualTextInfo
-	sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=DiagnosticVirtualTextHint
-]]
 
 vim.keymap.set("n", "<leader>df", vim.diagnostic.open_float, { silent=true })
 vim.keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { silent=true })
