@@ -100,6 +100,9 @@ require("gruvbox").setup({
 		["@field"] = { link = "Normal" },
 		["@property"] = { link = "Normal" },
 		["@constructor"] = { link = "Normal" },
+		["@keyword.directive"] = { link = "PreProc" },
+		["@keyword.import"] = { link = "PreProc" },
+		["@keyword.conditional.ternary"] = { link = "Normal" },
 	}
 })
 vim.cmd("colorscheme gruvbox")
