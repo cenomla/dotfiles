@@ -86,6 +86,9 @@ vim.opt.background = "dark"
 
 require("gruvbox").setup({
 	terminal_colors = true,
+	italic = {
+		strings = false,
+	},
 	overrides = {
 		String = { fg = "#ebdbb2", bg = "#3c3836" },
 		Function = { link = "Normal" },
@@ -96,6 +99,7 @@ require("gruvbox").setup({
 		["@constant.builtin"] = { link = "GruvboxPurple" },
 		["@field"] = { link = "Normal" },
 		["@property"] = { link = "Normal" },
+		["@constructor"] = { link = "Normal" },
 	}
 })
 vim.cmd("colorscheme gruvbox")
