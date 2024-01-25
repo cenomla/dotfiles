@@ -77,7 +77,7 @@ vim.opt.hidden = true
 vim.opt.backup = false
 vim.opt.undofile = false
 
-vim.cmd("syntax off")
+vim.cmd("syntax on")
 
 vim.opt.mouse = "a"
 
@@ -86,23 +86,25 @@ vim.opt.background = "dark"
 
 require("gruvbox").setup({
 	terminal_colors = true,
+	bold = false,
 	italic = {
 		strings = false,
+		emphasis = false,
+		comments = false,
+		operators = false,
+		folds = true,
 	},
 	overrides = {
 		String = { fg = "#ebdbb2", bg = "#3c3836" },
 		Function = { link = "Normal" },
-		Operator = { link = "Normal" },
 		Delimiter = { link = "Normal" },
+		["@type"] = { link = "Normal" },
+		["@type.builtin"] = { link = "Normal" },
 		["@type.qualifier"] = { link = "Special" },
-		["@constant"] = { link = "Normal" },
-		["@constant.builtin"] = { link = "GruvboxPurple" },
-		["@field"] = { link = "Normal" },
-		["@property"] = { link = "Normal" },
-		["@constructor"] = { link = "Normal" },
 		["@keyword.directive"] = { link = "PreProc" },
 		["@keyword.import"] = { link = "PreProc" },
-		["@keyword.conditional.ternary"] = { link = "Normal" },
+		["@keyword.conditional.ternary"] = { link = "Operator" },
+		["@lsp.type.parameter"] = { link = "Normal" },
 	}
 })
 vim.cmd("colorscheme gruvbox")
@@ -333,7 +335,7 @@ local on_attach = function(client, bufnr)
 	vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
 	-- Disable lsp highlighting
-	client.server_capabilities.semanticTokensProvider = nil
+	--client.server_capabilities.semanticTokensProvider = nil
 
 	local bufopts = { silent=true, buffer=bufnr }
 
