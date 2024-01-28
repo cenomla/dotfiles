@@ -281,7 +281,7 @@ vim.g.show_spaces_that_precede_tabs = our
 
 -- Fzf config
 vim.g.fzf_command_prefix = "Fzf"
-vim.env.FZF_DEFAULT_COMMAND = "rg --files --path-separator=/ --hidden ."
+vim.env.FZF_DEFAULT_COMMAND = "rg --files --hidden ."
 
 -- Copilot config
 vim.g.copilot_filetypes = {
@@ -326,6 +326,14 @@ vim.diagnostic.config({
 		spacing = 1,
 	},
 })
+
+-- Highlight the line numbers for lines with diagnostic messages on them
+vim.cmd [[
+	sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=DiagnosticVirtualTextError
+	sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=DiagnosticVirtualTextWarn
+	sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=DiagnosticVirtualTextInfo
+	sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=DiagnosticVirtualTextHint
+]]
 
 vim.keymap.set("n", "<leader>df", vim.diagnostic.open_float, { silent=true })
 vim.keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { silent=true })
