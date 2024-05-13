@@ -16,6 +16,8 @@ require("packer").startup(function(use)
 	-- Packer can manage itself
 	use("wbthomason/packer.nvim")
 
+	use("andymass/vim-matchup")
+
 	use("junegunn/fzf")
 	use("junegunn/fzf.vim")
 
@@ -112,7 +114,12 @@ require("nvim-treesitter.configs").setup({
 	highlight = {
 		enable = true,
 		additional_vim_regex_highlighting = false,
+		disable = { "vimdoc" },
 	},
+	matchup = {
+		enable = true,
+		disable_virtual_text = true,
+	}
 })
 
 -- Open a floating window with a temp buffer containing a string
@@ -270,6 +277,9 @@ vim.api.nvim_create_autocmd("QuickFixCmdPost", {
 	nested = true,
 })
 
+-- matchup config
+vim.g.matchup_matchparen_offscreen = {}
+
 -- Better whitespace config
 vim.g.better_whitespace_enabled = 1
 vim.g.strip_max_file_size = 0
@@ -279,7 +289,7 @@ vim.g.show_spaces_that_precede_tabs = our
 
 -- Fzf config
 vim.g.fzf_command_prefix = "Fzf"
-vim.env.FZF_DEFAULT_COMMAND = "rg --files --path-separator=/ --hidden ."
+vim.env.FZF_DEFAULT_COMMAND = "rg --files --hidden ."
 
 -- Copilot config
 vim.g.copilot_filetypes = {
@@ -324,6 +334,14 @@ vim.diagnostic.config({
 		spacing = 1,
 	},
 })
+
+-- Highlight the line numbers for lines with diagnostic messages on them
+vim.cmd [[
+	sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=DiagnosticVirtualTextError
+	sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=DiagnosticVirtualTextWarn
+	sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=DiagnosticVirtualTextInfo
+	sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=DiagnosticVirtualTextHint
+]]
 
 vim.keymap.set("n", "<leader>df", vim.diagnostic.open_float, { silent=true })
 vim.keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { silent=true })
