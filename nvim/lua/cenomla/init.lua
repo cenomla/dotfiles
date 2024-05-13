@@ -16,6 +16,8 @@ require("packer").startup(function(use)
 	-- Packer can manage itself
 	use("wbthomason/packer.nvim")
 
+	use("andymass/vim-matchup")
+
 	use("junegunn/fzf")
 	use("junegunn/fzf.vim")
 
@@ -114,7 +116,12 @@ require("nvim-treesitter.configs").setup({
 	highlight = {
 		enable = true,
 		additional_vim_regex_highlighting = false,
+		disable = { "vimdoc" },
 	},
+	matchup = {
+		enable = true,
+		disable_virtual_text = true,
+	}
 })
 
 -- Open a floating window with a temp buffer containing a string
@@ -271,6 +278,9 @@ vim.api.nvim_create_autocmd("QuickFixCmdPost", {
 	command = "lwindow",
 	nested = true,
 })
+
+-- matchup config
+vim.g.matchup_matchparen_offscreen = {}
 
 -- Better whitespace config
 vim.g.better_whitespace_enabled = 1
