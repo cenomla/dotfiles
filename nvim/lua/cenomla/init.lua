@@ -29,8 +29,6 @@ require("packer").startup(function(use)
 
 	use("rbong/vim-crystalline")
 
-	use("github/copilot.vim")
-
 	use({
 		"nvim-treesitter/nvim-treesitter",
 		run = function()
