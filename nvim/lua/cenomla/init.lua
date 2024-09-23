@@ -305,6 +305,8 @@ vim.keymap.set("n", "<leader>p", "mggggqG'g")
 -- Key bind for showing all project todos
 vim.keymap.set("n", "<leader>t", ":cexpr system('rg -n TODO')<CR>")
 
+vim.cmd("command! -nargs=+ VimRg :cexpr system('rg -n <args>')")
+
 -- FZF binds
 vim.keymap.set("n", "<leader>ff", ":FzfFiles<CR>")
 vim.keymap.set("n", "<leader>fb", ":FzfBuffers<CR>")
