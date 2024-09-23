@@ -279,7 +279,7 @@ vim.g.show_spaces_that_precede_tabs = our
 
 -- Fzf config
 vim.g.fzf_command_prefix = "Fzf"
-vim.env.FZF_DEFAULT_COMMAND = "rg --files --hidden ."
+vim.env.FZF_DEFAULT_COMMAND = "rg --files --hidden"
 
 -- Copilot config
 vim.g.copilot_filetypes = {
