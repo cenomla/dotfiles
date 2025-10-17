@@ -1,6 +1,6 @@
 vim.cmd("filetype off")
 
-local ensure_packer = function()
+local function ensure_packer()
   local install_path = vim.fn.stdpath("data").."/site/pack/packer/start/packer.nvim"
   if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
     vim.fn.system({"git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", install_path})
@@ -116,8 +116,8 @@ require("nvim-treesitter.configs").setup({
 })
 
 -- Open a floating window with a temp buffer containing a string
-local function OpenTmpFloating(contents)
-	local function SplitLines (inputstr, sep)
+local function open_tmp_floating(contents)
+	local function split_lines (inputstr, sep)
 		if sep == nil then
 			sep = "%s"
 		end
@@ -132,7 +132,7 @@ local function OpenTmpFloating(contents)
 	local height = vim.api.nvim_win_get_height(0)
 
 	local bufnr = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, SplitLines(contents, '%c'))
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, split_lines(contents, '%c'))
 
 	local opts = {
 		relative='win',
@@ -151,7 +151,7 @@ local function OpenTmpFloating(contents)
 	vim.api.nvim_win_set_option(win, 'wrap', false)
 end
 
-local function ShellStdout(command)
+local function shell_stdout(command)
 	local file = assert(io.popen(command, 'r'))
 	file:flush()
 	local result = file:read('*all')
@@ -159,7 +159,7 @@ local function ShellStdout(command)
 	return result
 end
 
-local function GitBlame()
+local function git_blame()
 	local r,c = unpack(vim.api.nvim_win_get_cursor(0))
 	local startLine = r-10
 	if startLine < 1 then
@@ -170,13 +170,13 @@ local function GitBlame()
 		lineCount = 1
 	end
 	local command = 'git blame --date=short -L '..startLine..',+'..lineCount..' '..vim.api.nvim_buf_get_name(0)
-	local blame = ShellStdout(command)
-	OpenTmpFloating(blame)
+	local blame = shell_stdout(command)
+	open_tmp_floating(blame)
 end
 
 -- Pretty statusline and tabline
 
-local function CrystallineGroupSuffix()
+local function crystalline_group_suffix()
 	if vim.fn.mode() == 'i' and vim.o.paste then
 		return "2"
 	end
@@ -188,7 +188,7 @@ end
 
 function vim.g.CrystallineStatuslineFn(winnr)
 	local cl = require("crystalline")
-	vim.g.crystalline_group_suffix = CrystallineGroupSuffix()
+	vim.g.crystalline_group_suffix = crystalline_group_suffix()
 	local isCurrent = winnr == vim.fn.winnr()
 	local s = ""
 
@@ -316,7 +316,10 @@ vim.keymap.set("n", "<leader>fc", ":FzfCommands<CR>")
 vim.keymap.set("n", "<leader>fr", ":FzfRg<CR>")
 
 -- Git binds
-vim.keymap.set("n", "<leader>gb", GitBlame)
+vim.keymap.set("n", "<leader>gb", git_blame)
+
+-- P4 binds
+vim.keymap.set("n", "<leader>he", ":!p4 edit -c default %:p<CR>")
 
 -- lsp config
 
@@ -339,7 +342,7 @@ vim.keymap.set("n", "<leader>df", vim.diagnostic.open_float, { silent=true })
 vim.keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { silent=true })
 vim.keymap.set("n", "<leader>dq", vim.diagnostic.setqflist, { silent=true })
 
-local on_attach = function(client, bufnr)
+local function on_attach(client, bufnr)
 	vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
 	-- Disable lsp highlighting
@@ -361,6 +364,62 @@ local on_attach = function(client, bufnr)
 		end, 0)
 	end
 
+	local function find_write_refs()
+		local params = vim.lsp.util.make_position_params()
+		params.context = {
+			includeDeclaration = false,
+			role = 4
+		}
+
+		vim.lsp.buf_request(0, "textDocument/references", params, function(err, result, ctx, config)
+			if err then
+				vim.notify("Error while finding write references: " .. err.message, vim.log.levels.ERROR)
+				return
+			end
+
+			local filtered = {}
+			for _, ref in ipairs(result) do
+				if ref.role == 4 then
+					table.insert(filtered, ref)
+				end
+			end
+
+			if vim.tbl_isempty(filtered) then
+				return
+			end
+
+			local items = vim.lsp.util.locations_to_items(filtered, vim.lsp.get_client_by_id(ctx.client_id).offset_encoding)
+			vim.fn.setqflist(items)
+			vim.cmd("copen")
+		end)
+	end
+
+	local function print_current_function()
+		local params = vim.lsp.util.make_position_params(0)
+		vim.lsp.buf_request(0, "textDocument/documentSymbol", params, function(err, result, ctx, config)
+			if err or not result then
+				return
+			end
+
+			local function find_symbol(symbols, params)
+				for _, sym in ipairs(symbols) do
+					local range = sym.range or (sym.location and sym.location.range)
+					-- symbols types
+					-- 12 function
+					if range
+							and range.start.line <= params.position.line
+							and range["end"].line >= params.position.line then
+						local child = sym.children and find_symbol(sym.children, params)
+						return child or sym
+					end
+				end
+			end
+
+			local symbol = find_symbol(result, params)
+			print(symbol.name)
+		end)
+	end
+
 	vim.keymap.set("n", "<leader>lD", vim.lsp.buf.declaration, bufopts)
 	vim.keymap.set("n", "<leader>ld", vim.lsp.buf.definition, bufopts)
 	vim.keymap.set("n", "<leader>lt", vim.lsp.buf.type_definition, bufopts)
@@ -369,17 +428,23 @@ local on_attach = function(client, bufnr)
 	vim.keymap.set("n", "<leader>ln", vim.lsp.buf.rename, bufopts)
 	vim.keymap.set("n", "<leader>lr", vim.lsp.buf.references, bufopts)
 	vim.keymap.set("n", "<leader>ls", vim.lsp.buf.signature_help, bufopts)
-	vim.keymap.set("n", "<leader>lf", function() vim.lsp.buf.format{ async = true } end, bufopts)
+	vim.keymap.set("n", "<leader>lp", function() vim.lsp.buf.format{ async = true } end, bufopts)
 	if client.name == "clangd" then
 		vim.keymap.set("n", "<leader>lk", switch_source_header, bufopts)
+		vim.keymap.set("n", "<leader>lw", find_write_refs, bufopts)
+		vim.keymap.set("n", "<leader>lc", print_current_function, bufopts)
 	end
 end
 
 require("lspconfig")["clangd"].setup({
 	on_attach = on_attach,
 })
+require("lspconfig")["glsl_analyzer"].setup({
+	on_attach = on_attach,
+})
 
-require("lspconfig")["tsserver"].setup({
+require("lspconfig")["ts_ls"].setup({
+	cmd = { "typescript-language-server.cmd", "--stdio" },
 	on_attach = on_attach,
 })
 require("lspconfig")["dartls"].setup({
